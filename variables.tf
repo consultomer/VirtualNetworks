@@ -75,3 +75,48 @@ variable "location" {
   type    = string
   default = "East US"
 }
+
+# Updated variable definition
+variable "vms" {
+  type = map(object({
+    name     = string
+    location = string
+    size     = string
+    os_disk = object({
+      storage_account_type = string
+      disk_size_gb         = number
+    })
+    network_interface = object({
+      name    = string
+      primary = bool
+    })
+  }))
+  default = {
+    "TestVM1" = {
+      name     = "TestVM1"
+      location = "East US"
+      size     = "Standard_DS1_v2"
+      os_disk = {
+        storage_account_type = "Standard_LRS"
+        disk_size_gb         = 128
+      }
+      network_interface = {
+        name    = "TestVM1-nic"
+        primary = true
+      }
+    }
+    "TestVM2" = {
+      name     = "TestVM2"
+      location = "East US"
+      size     = "Standard_DS1_v2"
+      os_disk = {
+        storage_account_type = "Standard_LRS"
+        disk_size_gb         = 128
+      }
+      network_interface = {
+        name    = "TestVM2-nic"
+        primary = true
+      }
+    }
+  }
+}
