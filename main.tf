@@ -56,4 +56,5 @@ resource "azurerm_private_dns_zone_virtual_network_link" "cont" {
   resource_group_name   = azurerm_resource_group.rg.name # Fixed to use RG name
   private_dns_zone_name = azurerm_private_dns_zone.contoso.name
   virtual_network_id    = azurerm_virtual_network.vnets[each.key].id # Fixed reference
+  registration_enabled  = true
 }
