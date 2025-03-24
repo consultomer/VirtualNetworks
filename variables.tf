@@ -1,3 +1,4 @@
+
 variable "vnets" {
   type = map(object({
     location      = string
@@ -58,7 +59,7 @@ variable "vnets" {
       subnets = {
         subnet1 = {
           name             = "subnet1"
-          address_prefixes = ["10.2.1.0/24"]
+          address_prefixes = ["10.40.0.0/24"] # Fixed IP range to be within VNet address space
         }
       }
     }

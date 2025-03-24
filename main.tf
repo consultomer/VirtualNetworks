@@ -24,12 +24,23 @@ resource "azurerm_virtual_network" "vnets" {
   resource_group_name = azurerm_resource_group.rg.name
   address_space       = each.value.address_space
 }
-
+# Fixed subnet resource
 resource "azurerm_subnet" "subnets" {
-  for_each = { for vnet_name, vnet in var.vnets : vnet_name => vnet.subnets }
+  for_each = {
+    for subnet in flatten([
+      for vnet_name, vnet in var.vnets : [
+        for subnet_name, subnet in vnet.subnets : {
+          vnet_name        = vnet_name
+          subnet_name      = subnet_name
+          name             = subnet.name
+          address_prefixes = subnet.address_prefixes
+        }
+      ]
+    ]) : "${subnet.vnet_name}-${subnet.subnet_name}" => subnet
+  }
 
   name                 = each.value.name
   resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnets[each.key].name
+  virtual_network_name = azurerm_virtual_network.vnets[each.value.vnet_name].name
   address_prefixes     = each.value.address_prefixes
 }
