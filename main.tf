@@ -44,3 +44,8 @@ resource "azurerm_subnet" "subnets" {
   virtual_network_name = azurerm_virtual_network.vnets[each.value.vnet_name].name
   address_prefixes     = each.value.address_prefixes
 }
+
+resource "azurerm_private_dns_zone" "contoso" {
+  name                = "contoso.com"
+  resource_group_name = azurerm_resource_group.rg.name
+}
