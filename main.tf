@@ -49,3 +49,11 @@ resource "azurerm_private_dns_zone" "contoso" {
   name                = "contoso.com"
   resource_group_name = azurerm_resource_group.rg.name
 }
+
+resource "azurerm_private_dns_zone_virtual_network_link" "cont" {
+  for_each              = var.vnets
+  name                  = each.key
+  resource_group_name   = each.value.location
+  private_dns_zone_name = azurerm_private_dns_zone.contoso.name
+  virtual_network_id    = azurerm_virtual_network.vnets[each.value.vnet_name].id
+}
