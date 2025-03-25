@@ -53,16 +53,6 @@ variable "vnets" {
         }
       }
     }
-    ResearchVnet = {
-      address_space = ["10.40.0.0/16"]
-      location      = "East US"
-      subnets = {
-        subnet1 = {
-          name             = "subnet1"
-          address_prefixes = ["10.40.0.0/24"] # Fixed IP range to be within VNet address space
-        }
-      }
-    }
     HubVnet = {
       address_space = ["10.10.0.0/16"]
       location      = "East US"
@@ -70,6 +60,16 @@ variable "vnets" {
         subnet1 = {
           name             = "subnet1"
           address_prefixes = ["10.10.20.0/24"] # Fixed IP range to be within VNet address space
+        }
+      }
+    }
+    ResearchVnet = {
+      address_space = ["10.40.0.0/16"]
+      location      = "East US"
+      subnets = {
+        subnet1 = {
+          name             = "subnet1"
+          address_prefixes = ["10.40.0.0/24"] # Fixed IP range to be within VNet address space
         }
       }
     }
