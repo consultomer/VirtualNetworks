@@ -95,28 +95,22 @@ variable "vms" {
     "TestVM1" = {
       name     = "TestVM1"
       location = "East US"
-      size     = "Standard_DS1_v2"
-      os_disk = {
-        storage_account_type = "Standard_LRS"
-        disk_size_gb         = 128
-      }
-      network_interface = {
-        name    = "TestVM1-nic"
-        primary = true
-      }
+      vnet     = "CoreServicesVnet"
+      subnet   = "subnet1"
+
     }
     "TestVM2" = {
       name     = "TestVM2"
       location = "East US"
-      size     = "Standard_DS1_v2"
-      os_disk = {
-        storage_account_type = "Standard_LRS"
-        disk_size_gb         = 128
-      }
-      network_interface = {
-        name    = "TestVM2-nic"
-        primary = true
-      }
+      vnet     = "ManufacturingVnet"
+      subnet   = "subnet2"
+
+    }
+    "TestVM3" = {
+      name     = "TestVM3"
+      location = "East US"
+      vnet     = "ResearchVnet"
+      subnet   = "subnet1"
     }
   }
 }
