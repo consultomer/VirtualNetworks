@@ -102,15 +102,6 @@ resource "azurerm_network_manager_deployment" "example" {
   configuration_ids  = [azurerm_network_manager_connectivity_configuration.hub_spoke.id]
 }
 
-# Create public IP addresses for VMs
-resource "azurerm_public_ip" "public_ip" {
-  for_each = var.vms
-
-  name                = "public-ip-${each.key}"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Dynamic"
-}
 
 # Update network interfaces to associate public IPs
 resource "azurerm_network_interface" "nic" {
@@ -124,7 +115,6 @@ resource "azurerm_network_interface" "nic" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.subnets["${each.value.vnet}-${each.value.subnet}"].id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = azurerm_public_ip.public_ip[each.key].id
   }
 }
 
