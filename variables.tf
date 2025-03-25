@@ -76,7 +76,7 @@ variable "location" {
   default = "East US"
 }
 
-# Updated variable definition
+
 variable "vms" {
   type = map(object({
     name     = string
@@ -90,27 +90,54 @@ variable "vms" {
       name    = string
       primary = bool
     })
+    vnet   = string
+    subnet = string
   }))
   default = {
     "TestVM1" = {
       name     = "TestVM1"
       location = "East US"
-      vnet     = "CoreServicesVnet"
-      subnet   = "subnet1"
-
+      size     = "Standard_DS1_v2"
+      os_disk = {
+        storage_account_type = "Standard_LRS"
+        disk_size_gb         = 127
+      }
+      network_interface = {
+        name    = "nic-TestVM1"
+        primary = true
+      }
+      vnet   = "CoreServicesVnet"
+      subnet = "subnet1"
     }
     "TestVM2" = {
       name     = "TestVM2"
       location = "East US"
-      vnet     = "ManufacturingVnet"
-      subnet   = "subnet2"
-
+      size     = "Standard_DS1_v2"
+      os_disk = {
+        storage_account_type = "Standard_LRS"
+        disk_size_gb         = 127
+      }
+      network_interface = {
+        name    = "nic-TestVM2"
+        primary = true
+      }
+      vnet   = "ManufacturingVnet"
+      subnet = "subnet2"
     }
     "TestVM3" = {
       name     = "TestVM3"
       location = "East US"
-      vnet     = "ResearchVnet"
-      subnet   = "subnet1"
+      size     = "Standard_DS1_v2"
+      os_disk = {
+        storage_account_type = "Standard_LRS"
+        disk_size_gb         = 127
+      }
+      network_interface = {
+        name    = "nic-TestVM3"
+        primary = true
+      }
+      vnet   = "ResearchVnet"
+      subnet = "subnet1"
     }
   }
 }
