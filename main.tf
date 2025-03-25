@@ -101,9 +101,6 @@ resource "azurerm_network_manager_deployment" "example" {
   location           = "eastus"
   scope_access       = "Connectivity"
   configuration_ids  = [azurerm_network_manager_connectivity_configuration.hub_spoke.id]
-  triggers = {
-    config_version = azurerm_network_manager_connectivity_configuration.hub_spoke.etag
-  }
 }
 
 # Public IP for Firewall
