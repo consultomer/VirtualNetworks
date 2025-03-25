@@ -68,8 +68,9 @@ resource "azurerm_network_manager_network_group" "spokes" {
 resource "azurerm_network_manager_static_member" "spokes" {
   for_each = {
     for vnet_name, vnet in var.vnets : vnet_name => vnet
-    if vnet_name != "HubVnet" # Exclude hub VNET
+    if vnet_name != "HubVnet" # Only exclude HubVnet
   }
+
 
   name                      = "spoke-${each.key}"
   network_group_id          = azurerm_network_manager_network_group.spokes.id
