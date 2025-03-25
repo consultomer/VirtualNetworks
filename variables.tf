@@ -63,6 +63,16 @@ variable "vnets" {
         }
       }
     }
+    HubVnet = {
+      address_space = ["10.10.0.0/16"]
+      location      = "East US"
+      subnets = {
+        subnet1 = {
+          name             = "subnet1"
+          address_prefixes = ["10.10.20.0/24"] # Fixed IP range to be within VNet address space
+        }
+      }
+    }
   }
 }
 
@@ -107,7 +117,7 @@ variable "vms" {
         primary = true
       }
       vnet   = "CoreServicesVnet"
-      subnet = "subnet1"
+      subnet = "subnet2"
     }
     "TestVM2" = {
       name     = "TestVM2"
