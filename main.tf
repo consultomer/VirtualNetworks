@@ -48,8 +48,8 @@ resource "azurerm_subnet" "subnets" {
 resource "azurerm_linux_virtual_machine" "vms" {
   for_each = {
     for subnet_key, subnet in azurerm_subnet.subnets : subnet_key => {
-      subnet_id = subnet.id
-      vnet_name = subnet_key
+      subnet_id   = subnet.id
+      vnet_name   = subnet_key
       address_pre = subnet.address_prefixes
     }
   }
