@@ -101,6 +101,56 @@ resource "azurerm_network_manager_deployment" "example" {
   location           = "eastus"
   scope_access       = "Connectivity"
   configuration_ids  = [azurerm_network_manager_connectivity_configuration.hub_spoke.id]
+  triggers = {
+    config_version = azurerm_network_manager_connectivity_configuration.hub_spoke.etag
+  }
+}
+
+# Public IP for Firewall
+resource "azurerm_public_ip" "firewall_pip" {
+  name                = "Firewall-PIP"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
+# Azure Firewall in Hub
+resource "azurerm_firewall" "hub_firewall" {
+  name                = "HubFirewall"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku_name            = "AZFW_VNet"
+  sku_tier            = "Standard"
+
+  ip_configuration {
+    name                 = "configuration"
+    subnet_id            = azurerm_subnet.subnets["HubVnet-AzureFirewallSubnet"].id
+    public_ip_address_id = azurerm_public_ip.firewall_pip.id
+  }
+}
+
+# Route Table for Spokes
+resource "azurerm_route_table" "spoke_rt" {
+  name                = "SpokeRouteTable"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  # Removed invalid attribute disable_bgp_route_propagation
+
+  route {
+    name                   = "ToOtherSpokes"
+    address_prefix         = "10.0.0.0/8" # Covers all spoke VNets
+    next_hop_type          = "VirtualAppliance"
+    next_hop_in_ip_address = azurerm_firewall.hub_firewall.ip_configuration[0].private_ip_address
+  }
+}
+
+# Associate Route Table with Spoke Subnets
+resource "azurerm_subnet_route_table_association" "spoke_rt_assoc" {
+  for_each = { for k, v in azurerm_subnet.subnets : k => v if length(regexall("subnet1", k)) > 0 }
+
+  subnet_id      = each.value.id
+  route_table_id = azurerm_route_table.spoke_rt.id
 }
 
 # Network Interfaces
