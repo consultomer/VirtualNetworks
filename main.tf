@@ -44,15 +44,22 @@ resource "azurerm_subnet" "subnets" {
   virtual_network_name = azurerm_virtual_network.vnets[each.value.vnet_name].name
   address_prefixes     = each.value.address_prefixes
 }
+resource "azurerm_network_interface" "nic" {
+  for_each = azurerm_subnet.subnets
+
+  name                = "nic-${each.key}"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = each.value.id
+    private_ip_address_allocation = "Dynamic"
+  }
+}
 
 resource "azurerm_linux_virtual_machine" "vms" {
-  for_each = {
-    for subnet_key, subnet in azurerm_subnet.subnets : subnet_key => {
-      subnet_id   = subnet.id
-      vnet_name   = subnet_key
-      address_pre = subnet.address_prefixes
-    }
-  }
+  for_each = azurerm_network_interface.nic
 
   name                = "vm-${each.key}"
   resource_group_name = azurerm_resource_group.rg.name
@@ -62,9 +69,7 @@ resource "azurerm_linux_virtual_machine" "vms" {
   admin_username = "adminuser"
   admin_password = "P@ssw0rd1234!"
 
-  network_interface_ids = {
-    subnet_id = each.value.address_pre
-  }
+  network_interface_ids = [each.value.id] # Correct way to assign a list of network interface IDs
 
   os_disk {
     caching              = "ReadWrite"
