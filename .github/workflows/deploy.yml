@@ -28,6 +28,9 @@ jobs:
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
 
+    - name: Terraform Destroy (Cleanup)
+      run: terraform destroy -auto-approve
+
     - name: Terraform Init
       run: terraform init -input=false
 
