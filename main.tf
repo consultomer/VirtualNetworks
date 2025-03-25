@@ -88,11 +88,6 @@ resource "azurerm_network_manager_connectivity_configuration" "hub_spoke" {
     global_mesh_enabled = true
     use_hub_gateway     = true
   }
-
-  hub {
-    resource_id   = azurerm_virtual_network.vnets["ResearchVnet"].id
-    resource_type = "Microsoft.Network/virtualNetworks"
-  }
 }
 
 # Deploy Network Manager Configuration
