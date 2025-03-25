@@ -104,12 +104,9 @@ resource "azurerm_network_manager_deployment" "example" {
 }
 
 # Public IP for Firewall
-resource "azurerm_public_ip" "firewall_pip" {
-  name                = "Firewall-PIP"
-  location            = azurerm_resource_group.rg.location
+data "azurerm_public_ip" "existing_firewall_pip" {
+  name                = "Existing-Firewall-PIP"
   resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Static"
-  sku                 = "Standard"
 }
 
 # Azure Firewall in Hub
@@ -123,7 +120,7 @@ resource "azurerm_firewall" "hub_firewall" {
   ip_configuration {
     name                 = "configuration"
     subnet_id            = azurerm_subnet.subnets["HubVnet-AzureFirewallSubnet"].id
-    public_ip_address_id = azurerm_public_ip.firewall_pip.id
+    public_ip_address_id = data.azurerm_public_ip.firewall_pip.id
   }
 }
 
