@@ -75,38 +75,3 @@ resource "azurerm_network_interface" "main" {
   }
 }
 
-# Virtual Machine Resource
-resource "azurerm_virtual_machine" "Test1" {
-  for_each                      = var.vms
-  name                          = each.value.name
-  location                      = each.value.location
-  resource_group_name           = azurerm_resource_group.rg.name
-  network_interface_ids         = [azurerm_network_interface.main[each.key].id]
-  vm_size                       = each.value.size # Changed from vm_size to match variable name
-  delete_os_disk_on_termination = true
-
-  storage_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
-    version   = "latest"
-  }
-
-  storage_os_disk {
-    name              = "${each.value.name}-osdisk"
-    caching           = "ReadWrite"
-    create_option     = "FromImage"
-    managed_disk_type = each.value.os_disk.storage_account_type
-    disk_size_gb      = each.value.os_disk.disk_size_gb
-  }
-
-  os_profile {
-    computer_name  = each.value.name
-    admin_username = "adminuser"
-    admin_password = "Password1234!" # Note: Consider using a more secure method for credentials
-  }
-
-  os_profile_linux_config {
-    disable_password_authentication = false
-  }
-}
