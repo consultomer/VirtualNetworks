@@ -75,7 +75,7 @@ resource "azurerm_linux_virtual_machine" "vms" {
     caching              = "ReadWrite"
     storage_account_type = "Standard_LRS"
   }
-
+  disable_password_authentication = false
   source_image_reference {
     publisher = "Canonical"
     offer     = "UbuntuServer"
