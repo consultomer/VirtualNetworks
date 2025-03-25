@@ -50,6 +50,7 @@ resource "azurerm_linux_virtual_machine" "vms" {
     for subnet_key, subnet in azurerm_subnet.subnets : subnet_key => {
       subnet_id = subnet.id
       vnet_name = subnet_key
+      address_pre = subnet.address_prefixes
     }
   }
 
@@ -62,7 +63,7 @@ resource "azurerm_linux_virtual_machine" "vms" {
   admin_password = "P@ssw0rd1234!"
 
   network_interface_ids = {
-    subnet_id = each.value.subnet_id
+    subnet_id = each.value.address_pre
   }
 
   os_disk {
