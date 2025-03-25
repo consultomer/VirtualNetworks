@@ -58,3 +58,55 @@ resource "azurerm_private_dns_zone_virtual_network_link" "cont" {
   virtual_network_id    = azurerm_virtual_network.vnets[each.key].id # Fixed reference
   registration_enabled  = true
 }
+
+
+# Network Interface Resource
+resource "azurerm_network_interface" "main" {
+  for_each            = var.vms
+  name                = each.value.network_interface.name
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  ip_configuration {
+    name                          = "ipconfig-${each.key}"
+    subnet_id                     = azurerm_subnet.subnets["CoreServicesVnet-subnet1"].id # Using first subnet from CoreServicesVnet
+    private_ip_address_allocation = "Dynamic"
+    primary                       = each.value.network_interface.primary
+  }
+}
+
+# Virtual Machine Resource
+resource "azurerm_virtual_machine" "Test1" {
+  for_each                      = var.vms
+  name                          = each.value.name
+  location                      = each.value.location
+  resource_group_name           = azurerm_resource_group.rg.name
+  network_interface_ids         = [azurerm_network_interface.main[each.key].id]
+  vm_size                       = each.value.size # Changed from vm_size to match variable name
+  delete_os_disk_on_termination = true
+
+  storage_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "16.04-LTS"
+    version   = "latest"
+  }
+
+  storage_os_disk {
+    name              = "${each.value.name}-osdisk"
+    caching           = "ReadWrite"
+    create_option     = "FromImage"
+    managed_disk_type = each.value.os_disk.storage_account_type
+    disk_size_gb      = each.value.os_disk.disk_size_gb
+  }
+
+  os_profile {
+    computer_name  = each.value.name
+    admin_username = "adminuser"
+    admin_password = "Password1234!" # Note: Consider using a more secure method for credentials
+  }
+
+  os_profile_linux_config {
+    disable_password_authentication = false
+  }
+}
