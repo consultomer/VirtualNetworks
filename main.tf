@@ -106,8 +106,8 @@ resource "azurerm_network_manager_deployment" "example" {
 # Public IP for Firewall
 resource "azurerm_public_ip" "firewall_pip" {
   name                = "Firewall-PIP"
-  location            = "East US"
-  resource_group_name = "TestingTerraform"
+  location            = "West US 2"
+  resource_group_name = "PPPP"
   allocation_method   = "Static"
   sku                 = "Standard"
 }
