@@ -12,9 +12,23 @@ provider "azurerm" {
   subscription_id = "830e9ec2-6cf9-4d0a-a2ac-5a629482dd82"
 }
 
+data "azurerm_subscription" "current" {
+}
+
 resource "azurerm_resource_group" "rg" {
   name     = "ContosoResourceGroup"
   location = "East US"
+}
+
+resource "azurerm_network_manager" "AVNM" {
+  name                = "avnm-network-manager"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  scope {
+    subscription_ids = [data.azurerm_subscription.current.id]
+  }
+  scope_accesses = ["Connectivity"]
+  description    = "example network manager"
 }
 
 resource "azurerm_virtual_network" "vnets" {
@@ -44,6 +58,49 @@ resource "azurerm_subnet" "subnets" {
   virtual_network_name = azurerm_virtual_network.vnets[each.value.vnet_name].name
   address_prefixes     = each.value.address_prefixes
 }
+# Define Network Group for Spokes
+resource "azurerm_network_manager_network_group" "spokes" {
+  name               = "spokes-group"
+  network_manager_id = azurerm_network_manager.AVNM.id
+  description        = "Network group for spoke VNETs"
+}
+
+resource "azurerm_network_manager_static_member" "spokes" {
+  for_each = {
+    for vnet_name, vnet in var.vnets : vnet_name => vnet
+    if vnet_name != "ResearchVnet" # Exclude hub VNET
+  }
+
+  name                      = "spoke-${each.key}"
+  network_group_id          = azurerm_network_manager_network_group.spokes.id
+  target_virtual_network_id = azurerm_virtual_network.vnets[each.key].id
+}
+
+# Define Hub-Spoke Connectivity Configuration
+resource "azurerm_network_manager_connectivity_configuration" "hub_spoke" {
+  name                  = "hub-spoke-config"
+  network_manager_id    = azurerm_network_manager.AVNM.id
+  connectivity_topology = "HubAndSpoke"
+
+  applies_to_group {
+    group_connectivity = "None"
+    network_group_id   = azurerm_network_manager_network_group.spokes.id
+  }
+
+  hub {
+    resource_id   = azurerm_virtual_network.vnets["ResearchVnet"].id
+    resource_type = "Microsoft.Network/virtualNetworks"
+  }
+}
+
+# Deploy Network Manager Configuration
+resource "azurerm_network_manager_deployment" "example" {
+  network_manager_id = azurerm_network_manager.AVNM.id
+  location           = "eastus"
+  scope_access       = "Connectivity"
+  configuration_ids  = [azurerm_network_manager_connectivity_configuration.hub_spoke.id]
+}
+
 # Create network interfaces for VMs
 resource "azurerm_network_interface" "nic" {
   for_each = var.vms
