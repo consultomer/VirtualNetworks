@@ -33,7 +33,7 @@ variable "vnets" {
     }
     ManufacturingVnet = {
       address_space = ["10.30.0.0/16"]
-      location      = "West Europe"
+      location      = "East US"
       subnets = {
         subnet1 = {
           name             = "subnet1"
@@ -55,7 +55,7 @@ variable "vnets" {
     }
     ResearchVnet = {
       address_space = ["10.40.0.0/16"]
-      location      = "South East Asia"
+      location      = "East US"
       subnets = {
         subnet1 = {
           name             = "subnet1"
