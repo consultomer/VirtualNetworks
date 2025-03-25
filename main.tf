@@ -12,8 +12,7 @@ provider "azurerm" {
   subscription_id = "830e9ec2-6cf9-4d0a-a2ac-5a629482dd82"
 }
 
-data "azurerm_subscription" "current" {
-}
+data "azurerm_subscription" "current" {}
 
 resource "azurerm_resource_group" "rg" {
   name     = "ContosoResourceGroup"
@@ -31,6 +30,7 @@ resource "azurerm_network_manager" "AVNM" {
   description    = "example network manager"
 }
 
+# Virtual Networks
 resource "azurerm_virtual_network" "vnets" {
   for_each            = var.vnets
   name                = each.key
@@ -38,7 +38,8 @@ resource "azurerm_virtual_network" "vnets" {
   resource_group_name = azurerm_resource_group.rg.name
   address_space       = each.value.address_space
 }
-# Fixed subnet resource
+
+# Subnets
 resource "azurerm_subnet" "subnets" {
   for_each = {
     for subnet in flatten([
@@ -58,7 +59,8 @@ resource "azurerm_subnet" "subnets" {
   virtual_network_name = azurerm_virtual_network.vnets[each.value.vnet_name].name
   address_prefixes     = each.value.address_prefixes
 }
-# Define Network Group for Spokes
+
+# Network Group for Spokes
 resource "azurerm_network_manager_network_group" "spokes" {
   name               = "spokes-group"
   network_manager_id = azurerm_network_manager.AVNM.id
@@ -68,16 +70,15 @@ resource "azurerm_network_manager_network_group" "spokes" {
 resource "azurerm_network_manager_static_member" "spokes" {
   for_each = {
     for vnet_name, vnet in var.vnets : vnet_name => vnet
-    if vnet_name != "HubVnet" # Only exclude HubVnet
+    if vnet_name != "HubVnet"
   }
-
 
   name                      = "spoke-${each.key}"
   network_group_id          = azurerm_network_manager_network_group.spokes.id
   target_virtual_network_id = azurerm_virtual_network.vnets[each.key].id
 }
 
-# Define Hub-Spoke Connectivity Configuration
+# Hub-Spoke Connectivity Configuration
 resource "azurerm_network_manager_connectivity_configuration" "hub_spoke" {
   name                  = "hub-config"
   network_manager_id    = azurerm_network_manager.AVNM.id
@@ -102,8 +103,7 @@ resource "azurerm_network_manager_deployment" "example" {
   configuration_ids  = [azurerm_network_manager_connectivity_configuration.hub_spoke.id]
 }
 
-
-# Update network interfaces to associate public IPs
+# Network Interfaces
 resource "azurerm_network_interface" "nic" {
   for_each = var.vms
 
@@ -118,7 +118,7 @@ resource "azurerm_network_interface" "nic" {
   }
 }
 
-# Open port 3389 for RDP
+# Network Security Groups
 resource "azurerm_network_security_group" "nsg" {
   for_each = var.vms
 
@@ -137,9 +137,20 @@ resource "azurerm_network_security_group" "nsg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
+
+  security_rule {
+    name                       = "Allow-InterVNet"
+    priority                   = 110
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "10.0.0.0/8" # Allow all spoke VNet ranges
+    destination_address_prefix = "10.0.0.0/8"
+  }
 }
 
-# Associate NSG with network interfaces
 resource "azurerm_network_interface_security_group_association" "nsg_association" {
   for_each = var.vms
 
@@ -147,17 +158,17 @@ resource "azurerm_network_interface_security_group_association" "nsg_association
   network_security_group_id = azurerm_network_security_group.nsg[each.key].id
 }
 
-# Create Windows Virtual Machines
+# Windows Virtual Machines
 resource "azurerm_windows_virtual_machine" "vms" {
   for_each = var.vms
 
   name                = each.value.name
   resource_group_name = azurerm_resource_group.rg.name
   location            = each.value.location
-  size                = "Standard_DS1_v2" # Change if needed
+  size                = "Standard_DS1_v2"
 
   admin_username = "adminuser"
-  admin_password = "P@ssw0rd1234!" # Use a secure password or Vault
+  admin_password = "P@ssw0rd1234!"
 
   network_interface_ids = [azurerm_network_interface.nic[each.key].id]
   os_disk {
