@@ -115,8 +115,8 @@ resource "azurerm_public_ip" "firewall_pip" {
 # Azure Firewall in Hub
 resource "azurerm_firewall" "hub_firewall" {
   name                = "HubFirewall"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  location            = "West US 2"
+  resource_group_name = "PPPP"
   sku_name            = "AZFW_VNet"
   sku_tier            = "Standard"
 
