@@ -83,8 +83,9 @@ resource "azurerm_network_manager_connectivity_configuration" "hub_spoke" {
   connectivity_topology = "HubAndSpoke"
 
   applies_to_group {
-    group_connectivity = "None"
-    network_group_id   = azurerm_network_manager_network_group.spokes.id
+    group_connectivity  = "Mesh"
+    network_group_id    = azurerm_network_manager_network_group.spokes.id
+    global_mesh_enabled = true
   }
 
   hub {
