@@ -45,33 +45,35 @@ resource "azurerm_subnet" "subnets" {
   address_prefixes     = each.value.address_prefixes
 }
 
-resource "azurerm_private_dns_zone" "contoso" {
-  name                = "contoso.com"
+resource "azurerm_linux_virtual_machine" "vms" {
+  for_each = {
+    for subnet_key, subnet in azurerm_subnet.subnets : subnet_key => {
+      subnet_id = subnet.id
+      vnet_name = subnet_key
+    }
+  }
+
+  name                = "vm-${each.key}"
   resource_group_name = azurerm_resource_group.rg.name
-}
-
-resource "azurerm_private_dns_zone_virtual_network_link" "cont" {
-  for_each              = var.vnets
-  name                  = "${each.key}-link"             # Added suffix for clarity
-  resource_group_name   = azurerm_resource_group.rg.name # Fixed to use RG name
-  private_dns_zone_name = azurerm_private_dns_zone.contoso.name
-  virtual_network_id    = azurerm_virtual_network.vnets[each.key].id # Fixed reference
-  registration_enabled  = true
-}
-
-
-# Network Interface Resource
-resource "azurerm_network_interface" "main" {
-  for_each            = var.vms
-  name                = each.value.network_interface.name
   location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
+  size                = "Standard_DS1_v2"
 
-  ip_configuration {
-    name                          = "ipconfig-${each.key}"
-    subnet_id                     = azurerm_subnet.subnets["CoreServicesVnet-subnet1"].id # Using first subnet from CoreServicesVnet
-    private_ip_address_allocation = "Dynamic"
-    primary                       = each.value.network_interface.primary
+  admin_username = "adminuser"
+  admin_password = "P@ssw0rd1234!"
+
+  network_interface_ids = {
+    subnet_id = each.value.subnet_id
+  }
+
+  os_disk {
+    caching              = "ReadWrite"
+    storage_account_type = "Standard_LRS"
+  }
+
+  source_image_reference {
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "18.04-LTS"
+    version   = "latest"
   }
 }
-
