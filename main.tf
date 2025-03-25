@@ -86,6 +86,7 @@ resource "azurerm_network_manager_connectivity_configuration" "hub_spoke" {
     network_group_id    = azurerm_network_manager_network_group.spokes.id
     group_connectivity  = "DirectlyConnected"
     global_mesh_enabled = true
+    use_hub_gateway     = true
   }
 
   hub {
