@@ -78,7 +78,7 @@ resource "azurerm_network_manager_static_member" "spokes" {
 
 # Define Hub-Spoke Connectivity Configuration
 resource "azurerm_network_manager_connectivity_configuration" "hub_spoke" {
-  name                  = "hub-spoke-config"
+  name                  = "mesh-config"
   network_manager_id    = azurerm_network_manager.AVNM.id
   connectivity_topology = "Mesh"
 
@@ -102,7 +102,17 @@ resource "azurerm_network_manager_deployment" "example" {
   configuration_ids  = [azurerm_network_manager_connectivity_configuration.hub_spoke.id]
 }
 
-# Create network interfaces for VMs
+# Create public IP addresses for VMs
+resource "azurerm_public_ip" "public_ip" {
+  for_each = var.vms
+
+  name                = "public-ip-${each.key}"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Dynamic"
+}
+
+# Update network interfaces to associate public IPs
 resource "azurerm_network_interface" "nic" {
   for_each = var.vms
 
@@ -114,7 +124,37 @@ resource "azurerm_network_interface" "nic" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.subnets["${each.value.vnet}-${each.value.subnet}"].id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.public_ip[each.key].id
   }
+}
+
+# Open port 3389 for RDP
+resource "azurerm_network_security_group" "nsg" {
+  for_each = var.vms
+
+  name                = "nsg-${each.key}"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  security_rule {
+    name                       = "Allow-RDP"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+}
+
+# Associate NSG with network interfaces
+resource "azurerm_network_interface_security_group_association" "nsg_association" {
+  for_each = var.vms
+
+  network_interface_id      = azurerm_network_interface.nic[each.key].id
+  network_security_group_id = azurerm_network_security_group.nsg[each.key].id
 }
 
 # Create Windows Virtual Machines
