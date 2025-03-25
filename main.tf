@@ -90,7 +90,7 @@ resource "azurerm_network_manager_connectivity_configuration" "hub_spoke" {
   }
   hub {
     resource_id   = azurerm_virtual_network.vnets["HubVnet"].id
-    resource_type = "Microsoft.Network/networkGroups"
+    resource_type = "Microsoft.Network/virtualNetworks"
   }
 }
 
