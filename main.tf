@@ -84,10 +84,9 @@ resource "azurerm_network_manager_connectivity_configuration" "hub_spoke" {
   connectivity_topology = "HubAndSpoke"
 
   applies_to_group {
-    network_group_id    = azurerm_network_manager_network_group.spokes.id
-    group_connectivity  = "DirectlyConnected"
-    global_mesh_enabled = true
-    use_hub_gateway     = true
+    network_group_id   = azurerm_network_manager_network_group.spokes.id
+    group_connectivity = "DirectlyConnected"
+    use_hub_gateway    = true
   }
   hub {
     resource_id   = azurerm_virtual_network.vnets["HubVnet"].id
