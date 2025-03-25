@@ -80,7 +80,7 @@ resource "azurerm_network_manager_static_member" "spokes" {
 resource "azurerm_network_manager_connectivity_configuration" "hub_spoke" {
   name                  = "hub-config"
   network_manager_id    = azurerm_network_manager.AVNM.id
-  connectivity_topology = "HubAndSpoke"
+  connectivity_topology = "DirectlyConnected"
 
   applies_to_group {
     network_group_id    = azurerm_network_manager_network_group.spokes.id
