@@ -54,12 +54,16 @@ variable "vnets" {
       }
     }
     HubVnet = {
-      address_space = ["10.10.0.0/16"]
+      address_space = ["10.0.0.0/16"]
       location      = "East US"
       subnets = {
-        subnet1 = {
-          name             = "subnet1"
-          address_prefixes = ["10.10.20.0/24"] # Fixed IP range to be within VNet address space
+        AzureFirewallSubnet = {
+          name             = "AzureFirewallSubnet"
+          address_prefixes = ["10.0.1.0/24"]
+        }
+        Management = {
+          name             = "Management"
+          address_prefixes = ["10.0.2.0/24"]
         }
       }
     }
