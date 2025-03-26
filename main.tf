@@ -15,8 +15,8 @@ provider "azurerm" {
 data "azurerm_subscription" "current" {}
 
 resource "azurerm_resource_group" "rg" {
-  name     = "ContosoResourceGroup"
-  location = "East US"
+  name     = var.resource_group_name
+  location = var.location
 }
 
 resource "azurerm_network_manager" "AVNM" {

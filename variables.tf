@@ -82,7 +82,7 @@ variable "vnets" {
 
 variable "resource_group_name" {
   type    = string
-  default = "ContosoResourceGroup"
+  default = "VirtualNetworks"
 }
 
 variable "location" {
