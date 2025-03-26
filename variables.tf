@@ -93,7 +93,7 @@ variable "vms" {
         primary = true
       }
       vnet   = "CoreServicesVnet"
-      subnet = "subnet2"
+      subnet = "subnet1"
     }
     "TestVM2" = {
       name     = "TestVM2"
@@ -108,7 +108,7 @@ variable "vms" {
         primary = true
       }
       vnet   = "ManufacturingVnet"
-      subnet = "subnet2"
+      subnet = "subnet1"
     }
     "TestVM3" = {
       name     = "TestVM3"
