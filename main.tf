@@ -60,6 +60,45 @@ resource "azurerm_subnet" "subnets" {
   address_prefixes     = each.value.address_prefixes
 }
 
+resource "azurerm_subnet" "example" {
+  name                 = "GatewaySubnet"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = "HubVnet"
+  address_prefixes     = ["10.0.1.0/24"]
+}
+
+resource "azurerm_public_ip" "example" {
+  name                = "test"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  allocation_method = "Dynamic"
+}
+
+resource "azurerm_virtual_network_gateway" "example" {
+  name                = "test"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+
+  type     = "Vpn"
+  vpn_type = "RouteBased"
+
+  active_active = false
+  enable_bgp    = false
+  sku           = "VpnGw1"
+
+  ip_configuration {
+    name                          = "vnetGatewayConfig"
+    public_ip_address_id          = azurerm_public_ip.example.id
+    private_ip_address_allocation = "Dynamic"
+    subnet_id                     = azurerm_subnet.example.id
+  }
+
+  vpn_client_configuration {
+    address_space = ["10.2.0.0/24"]
+
+  }
+}
 # Network Group for Spokes
 resource "azurerm_network_manager_network_group" "spokes" {
   name               = "spokes-group"
@@ -103,54 +142,6 @@ resource "azurerm_network_manager_deployment" "example" {
   configuration_ids  = [azurerm_network_manager_connectivity_configuration.hub_spoke.id]
 }
 
-# Public IP for Firewall
-resource "azurerm_public_ip" "firewall_pip" {
-  name                = "Firewall-PIP"
-  location            = "West US 2"
-  resource_group_name = "PPPP"
-  allocation_method   = "Static"
-  sku                 = "Standard"
-}
-
-# Azure Firewall in Hub
-resource "azurerm_firewall" "hub_firewall" {
-  name                = "HubFirewall"
-  location            = "West US 2"
-  resource_group_name = "PPPP"
-  sku_name            = "AZFW_VNet"
-  sku_tier            = "Standard"
-
-  ip_configuration {
-    name                 = "configuration"
-    subnet_id            = azurerm_subnet.subnets["HubVnet-AzureFirewallSubnet"].id
-    public_ip_address_id = azurerm_public_ip.firewall_pip.id
-  }
-}
-
-# Route Table for Spokes
-resource "azurerm_route_table" "spoke_rt" {
-  name                = "SpokeRouteTable"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  # Removed invalid attribute disable_bgp_route_propagation
-
-  route {
-    name                   = "ToOtherSpokes"
-    address_prefix         = "10.0.0.0/8" # Covers all spoke VNets
-    next_hop_type          = "VirtualAppliance"
-    next_hop_in_ip_address = azurerm_firewall.hub_firewall.ip_configuration[0].private_ip_address
-  }
-}
-
-# Associate Route Table with Spoke Subnets
-resource "azurerm_subnet_route_table_association" "spoke_rt_assoc" {
-  for_each = { for k, v in azurerm_subnet.subnets : k => v if length(regexall("subnet1", k)) > 0 }
-
-  subnet_id      = each.value.id
-  route_table_id = azurerm_route_table.spoke_rt.id
-}
-
-# Network Interfaces
 resource "azurerm_network_interface" "nic" {
   for_each = var.vms
 
@@ -165,7 +156,7 @@ resource "azurerm_network_interface" "nic" {
   }
 }
 
-# Network Security Groups
+# Open port 3389 for RDP
 resource "azurerm_network_security_group" "nsg" {
   for_each = var.vms
 
@@ -184,20 +175,9 @@ resource "azurerm_network_security_group" "nsg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-
-  security_rule {
-    name                       = "Allow-InterVNet"
-    priority                   = 110
-    direction                  = "Inbound"
-    access                     = "Allow"
-    protocol                   = "*"
-    source_port_range          = "*"
-    destination_port_range     = "*"
-    source_address_prefix      = "10.0.0.0/8" # Allow all spoke VNet ranges
-    destination_address_prefix = "10.0.0.0/8"
-  }
 }
 
+# Associate NSG with network interfaces
 resource "azurerm_network_interface_security_group_association" "nsg_association" {
   for_each = var.vms
 
@@ -205,17 +185,17 @@ resource "azurerm_network_interface_security_group_association" "nsg_association
   network_security_group_id = azurerm_network_security_group.nsg[each.key].id
 }
 
-# Windows Virtual Machines
+# Create Windows Virtual Machines
 resource "azurerm_windows_virtual_machine" "vms" {
   for_each = var.vms
 
   name                = each.value.name
   resource_group_name = azurerm_resource_group.rg.name
   location            = each.value.location
-  size                = "Standard_DS1_v2"
+  size                = "Standard_DS1_v2" # Change if needed
 
   admin_username = "adminuser"
-  admin_password = "P@ssw0rd1234!"
+  admin_password = "P@ssw0rd1234!" # Use a secure password or Vault
 
   network_interface_ids = [azurerm_network_interface.nic[each.key].id]
   os_disk {
