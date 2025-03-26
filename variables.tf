@@ -9,71 +9,43 @@ variable "vnets" {
     }))
   }))
   default = {
-    CoreServicesVnet = {
-      address_space = ["10.20.0.0/16"]
-      location      = "East US"
-      subnets = {
-        subnet1 = {
-          name             = "subnet1"
-          address_prefixes = ["10.20.0.0/27"]
-        }
-        subnet2 = {
-          name             = "subnet2"
-          address_prefixes = ["10.20.10.0/24"]
-        }
-        subnet3 = {
-          name             = "subnet3"
-          address_prefixes = ["10.20.20.0/24"]
-        }
-        subnet4 = {
-          name             = "subnet4"
-          address_prefixes = ["10.20.30.0/24"]
-        }
-      }
-    }
-    ManufacturingVnet = {
-      address_space = ["10.30.0.0/16"]
-      location      = "East US"
-      subnets = {
-        subnet1 = {
-          name             = "subnet1"
-          address_prefixes = ["10.30.10.0/24"]
-        }
-        subnet2 = {
-          name             = "subnet2"
-          address_prefixes = ["10.30.20.0/24"]
-        }
-        subnet3 = {
-          name             = "subnet3"
-          address_prefixes = ["10.30.21.0/24"]
-        }
-        subnet4 = {
-          name             = "subnet4"
-          address_prefixes = ["10.30.22.0/24"]
-        }
-      }
-    }
     HubVnet = {
       address_space = ["10.0.0.0/16"]
       location      = "East US"
       subnets = {
-        AzureFirewallSubnet = {
-          name             = "AzureFirewallSubnet"
-          address_prefixes = ["10.0.3.0/24"]
-        }
-        Management = {
-          name             = "Management"
-          address_prefixes = ["10.0.2.0/24"]
+        subnet1 = {
+          name             = "subnet1"
+          address_prefixes = ["10.0.0.0/24"]
         }
       }
     }
-    ResearchVnet = {
-      address_space = ["10.40.0.0/16"]
+    CoreServicesVnet = {
+      address_space = ["10.1.0.0/16"]
       location      = "East US"
       subnets = {
         subnet1 = {
           name             = "subnet1"
-          address_prefixes = ["10.40.10.0/24"] # Fixed IP range to be within VNet address space
+          address_prefixes = ["10.1.0.0/24"]
+        }
+      }
+    }
+    ManufacturingVnet = {
+      address_space = ["10.2.0.0/16"]
+      location      = "East US"
+      subnets = {
+        subnet1 = {
+          name             = "subnet1"
+          address_prefixes = ["10.2.0.0/24"]
+        }
+      }
+    }
+    ResearchVnet = {
+      address_space = ["10.3.0.0/16"]
+      location      = "East US"
+      subnets = {
+        subnet1 = {
+          name             = "subnet1"
+          address_prefixes = ["10.3.0.0/24"] # Fixed IP range to be within VNet address space
         }
       }
     }

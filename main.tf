@@ -26,7 +26,7 @@ resource "azurerm_network_manager" "AVNM" {
   scope {
     subscription_ids = [data.azurerm_subscription.current.id]
   }
-  scope_accesses = ["Connectivity"]
+  scope_accesses = ["Connectivity", "SecurityAdmin"]
   description    = "example network manager"
 }
 
@@ -95,10 +95,6 @@ resource "azurerm_virtual_network_gateway" "example" {
     subnet_id                     = azurerm_subnet.example.id
   }
 
-  vpn_client_configuration {
-    address_space = ["10.2.0.0/24"]
-
-  }
 }
 # Network Group for Spokes
 resource "azurerm_network_manager_network_group" "spokes" {
@@ -127,12 +123,12 @@ resource "azurerm_network_manager_connectivity_configuration" "hub_spoke" {
   applies_to_group {
     network_group_id   = azurerm_network_manager_network_group.spokes.id
     group_connectivity = "DirectlyConnected"
-    use_hub_gateway    = true
   }
   hub {
     resource_id   = azurerm_virtual_network.vnets["HubVnet"].id
     resource_type = "Microsoft.Network/virtualNetworks"
   }
+  depends_on = [azurerm_virtual_network_gateway.example]
 }
 
 # Deploy Network Manager Configuration
@@ -141,6 +137,7 @@ resource "azurerm_network_manager_deployment" "example" {
   location           = "eastus"
   scope_access       = "Connectivity"
   configuration_ids  = [azurerm_network_manager_connectivity_configuration.hub_spoke.id]
+  depends_on         = [azurerm_network_manager_connectivity_configuration.hub_spoke]
 }
 
 resource "azurerm_network_interface" "nic" {
@@ -211,4 +208,5 @@ resource "azurerm_windows_virtual_machine" "vms" {
     sku       = "2019-Datacenter"
     version   = "latest"
   }
+  depends_on = [azurerm_network_manager_deployment.example]
 }
