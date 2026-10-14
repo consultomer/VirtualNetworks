@@ -170,7 +170,7 @@ resource "azurerm_network_security_group" "nsg" {
     protocol                   = "Tcp"
     source_port_range          = "*"
     destination_port_range     = "3389"
-    source_address_prefix      = "*"
+    source_address_prefix      = "10.20.0.0/24"
     destination_address_prefix = "*"
   }
 }
@@ -209,4 +209,7 @@ resource "azurerm_windows_virtual_machine" "vms" {
     version   = "latest"
   }
   depends_on = [azurerm_network_manager_deployment.example]
+  identity {
+    type = "SystemAssigned"
+  }
 }
